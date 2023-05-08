@@ -52,7 +52,10 @@ def depth_to_point_cloud():
     pcd2.rotate(R)
     pcd += pcd2
     pcd.transform([[1,0,0,0],[0,-1,0,0],[0,0,-1,0],[0,0,0,1]])
-    open3d.visualization.draw_geometries([pcd])
+    mesh = open3d.geometry.TriangleMesh.create_from_point_cloud_alpha_shape(pcd, 0.003)
+    mesh.compute_vertex_normals()
+    open3d.visualization.draw_geometries([mesh], mesh_show_back_face=True)
+    # open3d.visualization.draw_geometries([pcd])
 
 if __name__ == '__main__':
     depth_to_point_cloud()
