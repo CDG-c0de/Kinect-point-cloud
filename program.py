@@ -23,11 +23,6 @@ def depth_to_point_cloud():
     col_img_2 = open3d.io.read_image("color2.jpg")
     dep_img_2 = open3d.io.read_image("depth2.png")
 
-    # col_img_1 = open3d.io.read_image("rectified1.jpg")
-    # dep_img_1 = open3d.io.read_image("depth1.png")
-    # col_img_2 = open3d.io.read_image("rectified2.jpg")
-    # dep_img_2 = open3d.io.read_image("depth1.png")
-
     # Create RGBD images
     rgbd1 = open3d.geometry.RGBDImage.create_from_color_and_depth(col_img_1, dep_img_1, convert_rgb_to_intensity = False)
     rgbd2 = open3d.geometry.RGBDImage.create_from_color_and_depth(col_img_2, dep_img_2, convert_rgb_to_intensity = False)
@@ -54,15 +49,10 @@ def depth_to_point_cloud():
     print(R)
 
     # reg_p2p = open3d.pipelines.registration.registration_icp(pcd2, pcd, 1, homo_mat, open3d.pipelines.registration.TransformationEstimationPointToPoint())
+    # pcd2.transform(homo_mat)
 
-    pcd2.transform(homo_mat)
-
-    # Let master camera define world space origin
-    # R0 = np.eye(3, dtype=np.float32)
-    # T0 = np.array([0., 0., 0.]).reshape((3, 1))
-
-    # pcd2.translate(T)
-    # pcd2.rotate(R)
+    pcd2.translate(T)
+    pcd2.rotate(R)
     pcd += pcd2
     pcd.transform([[1,0,0,0],[0,-1,0,0],[0,0,-1,0],[0,0,0,1]])
     # pcd.estimate_normals(search_param=open3d.geometry.KDTreeSearchParamHybrid(radius=0.1, max_nn=30))
