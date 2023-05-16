@@ -2,7 +2,12 @@ from open3d import *
 import json
 import numpy as np
 import imageio
-import copy
+
+def swap_yaw_pitch(matrix):
+    new_matrix = np.copy(matrix)
+    new_matrix[0:3, 0:3] = matrix[0:3, [1, 0, 2]]
+    new_matrix[0:3, [1, 0, 2]] = matrix[0:3, 0:3]
+    return new_matrix
 
 def depth_to_point_cloud(): 
     
@@ -14,6 +19,7 @@ def depth_to_point_cloud():
     with open('extrinsic.json') as f3:
         extrinsic_json = json.load(f3)
 
+    # Get dimensions of images
     test_img = imageio.v2.imread("color1.jpg")
     height, width = test_img.shape[:2]
 
@@ -37,22 +43,24 @@ def depth_to_point_cloud():
 
     # Get extrinsic matrices
     R = np.array([extrinsic_json["rotation_matrix"][0:3], extrinsic_json["rotation_matrix"][3:6], extrinsic_json["rotation_matrix"][6:9]])
-    T = [(x / 1000)/2.4 for x in extrinsic_json["translation_matrix"][0:3]]
-    homo_mat = np.array([extrinsic_json["homo_matrix"][0:4], extrinsic_json["homo_matrix"][4:8], extrinsic_json["homo_matrix"][8:12], extrinsic_json["homo_matrix"][12:16]])
+    T = np.array([[x/1000/24] for x in extrinsic_json["translation_matrix"][0:3]])
 
-    homo_mat[0][3] = (homo_mat[0][3]/1000)/2.4
-    homo_mat[1][3] = (homo_mat[1][3]/1000)/2.4
-    homo_mat[2][3] = (homo_mat[2][3]/1000)/2.4
+    # Create homogeneous transformation matrix
+    t_homo = np.vstack((np.hstack((np.eye(3), T)), [0, 0, 0, 1]))
+    R_homo = np.vstack((np.hstack((R, [[0], [0], [0]])), [0, 0, 0, 1]))
+    homo = t_homo@R_homo
+    homo_inv = np.linalg.inv(homo) # Take inverse of homogeneous transformation matrix
+    print(t_homo, '\n')
+    print(R_homo, '\n')
+    print(homo, '\n')
+    print(homo_inv, '\n')
+    print(swap_yaw_pitch(homo_inv))
 
-    print(homo_mat)
-    print(T)
-    print(R)
+    fix = np.vstack((np.hstack((np.array([[0, 0, -1], [0, 1, 0], [1, 0, 0]]), [[0], [0], [0]])), [0, 0, 0, 1]))
 
     # reg_p2p = open3d.pipelines.registration.registration_icp(pcd2, pcd, 1, homo_mat, open3d.pipelines.registration.TransformationEstimationPointToPoint())
-    # pcd2.transform(homo_mat)
-
-    pcd2.translate(T)
-    pcd2.rotate(R)
+    pcd2.transform(swap_yaw_pitch(homo_inv))
+    # pcd2.transform(fix)
     pcd += pcd2
     pcd.transform([[1,0,0,0],[0,-1,0,0],[0,0,-1,0],[0,0,0,1]])
     # pcd.estimate_normals(search_param=open3d.geometry.KDTreeSearchParamHybrid(radius=0.1, max_nn=30))
