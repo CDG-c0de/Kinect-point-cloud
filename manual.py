@@ -1,7 +1,7 @@
 import open3d as o3d
 import copy
 import numpy as np
-
+import json
 
 def draw_registration_result(source, target, transformation):
     source_temp = copy.deepcopy(source)
@@ -28,9 +28,23 @@ def pick_points(pcd):
 
 def demo_manual_registration():
     print("Demo for manual ICP")
-    pcd_data = o3d.data.DemoICPPointClouds()
-    source = o3d.io.read_point_cloud(pcd_data.paths[0])
-    target = o3d.io.read_point_cloud(pcd_data.paths[2])
+    pcds = []
+    for i in range(1, 3):
+        col_img = o3d.io.read_image(f"color{str(i)}.jpg")
+        dep_img = o3d.io.read_image(f"depth{str(i)}.png")
+        rgbd = o3d.geometry.RGBDImage.create_from_color_and_depth(col_img, dep_img, convert_rgb_to_intensity = False)
+        with open(f'intrinsic{str(i)}.json') as f:
+            intrinsic_json = json.load(f)
+        phc = o3d.camera.PinholeCameraIntrinsic(1280, 720, intrinsic_json["intrinsic_matrix"][2], intrinsic_json["intrinsic_matrix"][3], intrinsic_json["intrinsic_matrix"][0], intrinsic_json["intrinsic_matrix"][1])
+        pcd = o3d.geometry.PointCloud.create_from_rgbd_image(rgbd, phc)
+        pcds.append(pcd)
+    source = pcds[0]
+    target = pcds[1]
+    source = source.voxel_down_sample(0.001)
+    target = target.voxel_down_sample(0.001)
+    # pcd_data = o3d.data.DemoICPPointClouds()
+    # source = o3d.io.read_point_cloud(pcd_data.paths[0])
+    # target = o3d.io.read_point_cloud(pcd_data.paths[2])
     print("Visualization of two point clouds before manual alignment")
     draw_registration_result(source, target, np.identity(4))
 
