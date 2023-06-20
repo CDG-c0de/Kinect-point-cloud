@@ -33,22 +33,21 @@ def execute_global_registration(source_down, target_down, source_fpfh,
 def depth_to_point_cloud(): 
 
     # Load image data and create point clouds
-    # test_img = imageio.imread("color0.jpg")
-    # height, width = test_img.shape[:2]
+    test_img = imageio.imread("color0.jpg")
+    height, width = test_img.shape[:2]
     
-    # pcds = []
-    # for i in range(0, 2):
-    #     col_img = o3d.io.read_image(f"color{str(i)}.jpg")
-    #     dep_img = o3d.io.read_image(f"depth{str(i)}.png")
-    #     rgbd = o3d.geometry.RGBDImage.create_from_color_and_depth(col_img, dep_img, convert_rgb_to_intensity = False)
-    #     with open(f'intrinsic{str(i)}.json') as f:
-    #         intrinsic_json = json.load(f)
-    #     phc = o3d.camera.PinholeCameraIntrinsic(width, height, intrinsic_json["intrinsic_matrix"][2], intrinsic_json["intrinsic_matrix"][3], intrinsic_json["intrinsic_matrix"][0], intrinsic_json["intrinsic_matrix"][1])
-    #     pcd = o3d.geometry.PointCloud.create_from_rgbd_image(rgbd, phc)
-    #     pcds.append(pcd) 
+    pcds = []
+    for i in range(0, 2):
+        col_img = o3d.io.read_image(f"color{str(i)}.jpg")
+        dep_img = o3d.io.read_image(f"depth{str(i)}.png")
+        rgbd = o3d.geometry.RGBDImage.create_from_color_and_depth(col_img, dep_img, convert_rgb_to_intensity = False)
+        with open(f'intrinsic{str(i)}.json') as f:
+            intrinsic_json = json.load(f)
+        phc = o3d.camera.PinholeCameraIntrinsic(width, height, intrinsic_json["intrinsic_matrix"][2], intrinsic_json["intrinsic_matrix"][3], intrinsic_json["intrinsic_matrix"][0], intrinsic_json["intrinsic_matrix"][1])
+        pcd = o3d.geometry.PointCloud.create_from_rgbd_image(rgbd, phc)
+        pcds.append(pcd) 
 
-    pcd = o3d.io.read_point_cloud("bekertje3.ply")
-    pcd2 = o3d.io.read_point_cloud("bekertje4.ply")
+    pcd, pcd2 = pcds
 
     voxel_size = 0.05
 

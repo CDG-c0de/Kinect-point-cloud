@@ -9,28 +9,22 @@ def load_point_clouds(amt, voxel_size=0.0):
     Load image data and create point clouds
     """
 
-    # test_img = imageio.imread("color0.jpg")
-    # height, width = test_img.shape[:2]
+    test_img = imageio.imread("color0.jpg")
+    height, width = test_img.shape[:2]
 
-    # pcds = []
-    # for i in range(0, amt):
-    #     col_img = o3d.io.read_image(f"color{str(i)}.jpg")
-    #     dep_img = o3d.io.read_image(f"depth{str(i)}.png")
-    #     rgbd = o3d.geometry.RGBDImage.create_from_color_and_depth(col_img, dep_img, convert_rgb_to_intensity = False)
-    #     with open(f'intrinsic{str(i)}.json') as f:
-    #         intrinsic_json = json.load(f)
-    #     phc = o3d.camera.PinholeCameraIntrinsic(width, height, intrinsic_json["intrinsic_matrix"][2], intrinsic_json["intrinsic_matrix"][3], intrinsic_json["intrinsic_matrix"][0], intrinsic_json["intrinsic_matrix"][1])
-    #     pcd = o3d.geometry.PointCloud.create_from_rgbd_image(rgbd, phc)
-    #     pcd.estimate_normals()
-    #     pcd.orient_normals_consistent_tangent_plane(100)
-    #     pcds.append(pcd)
-    source = o3d.io.read_point_cloud("bekertje3.ply")
-    source.estimate_normals()
-    source.orient_normals_consistent_tangent_plane(100)
-    target = o3d.io.read_point_cloud("bekertje4.ply")
-    target.estimate_normals()
-    target.orient_normals_consistent_tangent_plane(100)
-    return [source, target]
+    pcds = []
+    for i in range(0, amt):
+        col_img = o3d.io.read_image(f"color{str(i)}.jpg")
+        dep_img = o3d.io.read_image(f"depth{str(i)}.png")
+        rgbd = o3d.geometry.RGBDImage.create_from_color_and_depth(col_img, dep_img, convert_rgb_to_intensity = False)
+        with open(f'intrinsic{str(i)}.json') as f:
+            intrinsic_json = json.load(f)
+        phc = o3d.camera.PinholeCameraIntrinsic(width, height, intrinsic_json["intrinsic_matrix"][2], intrinsic_json["intrinsic_matrix"][3], intrinsic_json["intrinsic_matrix"][0], intrinsic_json["intrinsic_matrix"][1])
+        pcd = o3d.geometry.PointCloud.create_from_rgbd_image(rgbd, phc)
+        pcd.estimate_normals()
+        pcd.orient_normals_consistent_tangent_plane(100)
+        pcds.append(pcd)
+    return pcds
 
 def pairwise_registration(source, target, max_correspondence_distance_coarse, max_correspondence_distance_fine):
     icp_coarse = o3d.pipelines.registration.registration_icp(

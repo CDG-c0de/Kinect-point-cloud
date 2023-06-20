@@ -6,22 +6,22 @@ import imageio
 def depth_to_point_cloud(): 
     
     # Load JSON files 
-    with open('intrinsic1.json') as f:
+    with open('intrinsic0.json') as f:
         intrinsic_json_1 = json.load(f)
-    with open('intrinsic2.json') as f2:
+    with open('intrinsic1.json') as f2:
         intrinsic_json_2 = json.load(f2)
     with open('extrinsic.json') as f3:
         extrinsic_json = json.load(f3)
 
     # Get dimensions of images
-    test_img = imageio.v2.imread("color1.jpg")
+    test_img = imageio.v2.imread("color0.jpg")
     height, width = test_img.shape[:2]
 
     # Load color and depth images
-    col_img_1 = o3d.io.read_image("color1.jpg")
-    dep_img_1 = o3d.io.read_image("depth1.png")
-    col_img_2 = o3d.io.read_image("color2.jpg")
-    dep_img_2 = o3d.io.read_image("depth2.png")
+    col_img_1 = o3d.io.read_image("color0.jpg")
+    dep_img_1 = o3d.io.read_image("depth0.png")
+    col_img_2 = o3d.io.read_image("color1.jpg")
+    dep_img_2 = o3d.io.read_image("depth1.png")
 
     # Create RGBD images
     rgbd1 = o3d.geometry.RGBDImage.create_from_color_and_depth(col_img_1, dep_img_1, convert_rgb_to_intensity = False)
