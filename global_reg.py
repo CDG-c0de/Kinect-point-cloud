@@ -1,19 +1,15 @@
 import open3d as o3d
-import numpy as np
 import json
 import imageio
 
 def preprocess_point_cloud(pcd, voxel_size):
-    print(":: Downsample with a voxel size %.3f." % voxel_size)
     pcd_down = pcd.voxel_down_sample(voxel_size)
 
     radius_normal = voxel_size * 2
-    print(":: Estimate normal with search radius %.3f." % radius_normal)
     pcd_down.estimate_normals(
         o3d.geometry.KDTreeSearchParamHybrid(radius=radius_normal, max_nn=30))
 
     radius_feature = voxel_size * 5
-    print(":: Compute FPFH feature with search radius %.3f." % radius_feature)
     pcd_fpfh = o3d.pipelines.registration.compute_fpfh_feature(
         pcd_down,
         o3d.geometry.KDTreeSearchParamHybrid(radius=radius_feature, max_nn=100))
@@ -22,9 +18,6 @@ def preprocess_point_cloud(pcd, voxel_size):
 def execute_global_registration(source_down, target_down, source_fpfh,
                                 target_fpfh, voxel_size):
     distance_threshold = voxel_size * 1.5
-    print(":: RANSAC registration on downsampled point clouds.")
-    print("   Since the downsampling voxel size is %.3f," % voxel_size)
-    print("   we use a liberal distance threshold %.3f." % distance_threshold)
     result = o3d.pipelines.registration.registration_ransac_based_on_feature_matching(
         source_down, target_down, source_fpfh, target_fpfh, True,
         distance_threshold,
@@ -38,43 +31,36 @@ def execute_global_registration(source_down, target_down, source_fpfh,
     return result
 
 def depth_to_point_cloud(): 
+
+    # Load image data and create point clouds
+    # test_img = imageio.imread("color0.jpg")
+    # height, width = test_img.shape[:2]
     
-    # Load JSON files 
-    with open('intrinsic1.json') as f:
-        intrinsic_json_1 = json.load(f)
-    with open('intrinsic2.json') as f2:
-        intrinsic_json_2 = json.load(f2)
+    # pcds = []
+    # for i in range(0, 2):
+    #     col_img = o3d.io.read_image(f"color{str(i)}.jpg")
+    #     dep_img = o3d.io.read_image(f"depth{str(i)}.png")
+    #     rgbd = o3d.geometry.RGBDImage.create_from_color_and_depth(col_img, dep_img, convert_rgb_to_intensity = False)
+    #     with open(f'intrinsic{str(i)}.json') as f:
+    #         intrinsic_json = json.load(f)
+    #     phc = o3d.camera.PinholeCameraIntrinsic(width, height, intrinsic_json["intrinsic_matrix"][2], intrinsic_json["intrinsic_matrix"][3], intrinsic_json["intrinsic_matrix"][0], intrinsic_json["intrinsic_matrix"][1])
+    #     pcd = o3d.geometry.PointCloud.create_from_rgbd_image(rgbd, phc)
+    #     pcds.append(pcd) 
 
-    # Get dimensions of images
-    test_img = imageio.v2.imread("color1.jpg")
-    height, width = test_img.shape[:2]
-
-    # Load color and depth images
-    col_img_1 = o3d.io.read_image("color1.jpg")
-    dep_img_1 = o3d.io.read_image("depth1.png")
-    col_img_2 = o3d.io.read_image("color2.jpg")
-    dep_img_2 = o3d.io.read_image("depth2.png")
-
-    # Create RGBD images
-    rgbd1 = o3d.geometry.RGBDImage.create_from_color_and_depth(col_img_1, dep_img_1, convert_rgb_to_intensity = False)
-    rgbd2 = o3d.geometry.RGBDImage.create_from_color_and_depth(col_img_2, dep_img_2, convert_rgb_to_intensity = False)
-
-    # Create pinhole cameras
-    phc = o3d.camera.PinholeCameraIntrinsic(width, height, intrinsic_json_1["intrinsic_matrix"][2], intrinsic_json_1["intrinsic_matrix"][3], intrinsic_json_1["intrinsic_matrix"][0], intrinsic_json_1["intrinsic_matrix"][1])
-    phc2 = o3d.camera.PinholeCameraIntrinsic(width, height, intrinsic_json_2["intrinsic_matrix"][2], intrinsic_json_2["intrinsic_matrix"][3], intrinsic_json_2["intrinsic_matrix"][0], intrinsic_json_2["intrinsic_matrix"][1])
-    
-    # Create point clouds
-    pcd = o3d.geometry.PointCloud.create_from_rgbd_image(rgbd1, phc)
-    pcd2 = o3d.geometry.PointCloud.create_from_rgbd_image(rgbd2, phc2)
+    pcd = o3d.io.read_point_cloud("bekertje3.ply")
+    pcd2 = o3d.io.read_point_cloud("bekertje4.ply")
 
     voxel_size = 0.05
 
+    # Downsample point clouds and compute FPFH features
     source_down, source_fpfh = preprocess_point_cloud(pcd, voxel_size)
     target_down, target_fpfh = preprocess_point_cloud(pcd2, voxel_size)
     
+    # Execute global registration
     result_ransac = execute_global_registration(source_down, target_down, source_fpfh, target_fpfh, voxel_size)
     pcd2.transform(result_ransac.transformation)
 
+    # Combine point clouds
     pcd += pcd2
 
     # Visualize result

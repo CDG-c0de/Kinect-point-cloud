@@ -8,30 +8,28 @@ def draw_registration_result(source, target, transformation):
     source_temp = copy.deepcopy(source)
     target_temp = copy.deepcopy(target)
     source_temp.transform(transformation)
-    np.savetxt("trans.txt", transformation)
     o3d.visualization.draw_geometries([source_temp, target_temp])
 
-def depth_to_point_cloud(): 
+def depth_to_point_cloud():
+
+    # # Load image data and create point clouds
+    # test_img = imageio.imread("color0.jpg")
+    # height, width = test_img.shape[:2]
     
-    pcds = []
-    for i in range(0, 2):
-        col_img = o3d.io.read_image(f"color{str(i)}.jpg")
-        dep_img = o3d.io.read_image(f"depth{str(i)}.png")
-        rgbd = o3d.geometry.RGBDImage.create_from_color_and_depth(col_img, dep_img, convert_rgb_to_intensity = False)
-        with open(f'intrinsic{str(i)}.json') as f:
-            intrinsic_json = json.load(f)
-        phc = o3d.camera.PinholeCameraIntrinsic(1280, 720, intrinsic_json["intrinsic_matrix"][2], intrinsic_json["intrinsic_matrix"][3], intrinsic_json["intrinsic_matrix"][0], intrinsic_json["intrinsic_matrix"][1])
-        pcd = o3d.geometry.PointCloud.create_from_rgbd_image(rgbd, phc)
-        pcds.append(pcd) 
+    # pcds = []
+    # for i in range(0, 2):
+    #     col_img = o3d.io.read_image(f"color{str(i)}.jpg")
+    #     dep_img = o3d.io.read_image(f"depth{str(i)}.png")
+    #     rgbd = o3d.geometry.RGBDImage.create_from_color_and_depth(col_img, dep_img, convert_rgb_to_intensity = False)
+    #     with open(f'intrinsic{str(i)}.json') as f:
+    #         intrinsic_json = json.load(f)
+    #     phc = o3d.camera.PinholeCameraIntrinsic(width, height, intrinsic_json["intrinsic_matrix"][2], intrinsic_json["intrinsic_matrix"][3], intrinsic_json["intrinsic_matrix"][0], intrinsic_json["intrinsic_matrix"][1])
+    #     pcd = o3d.geometry.PointCloud.create_from_rgbd_image(rgbd, phc)
+    #     pcds.append(pcd) 
 
-    pcd = pcds[0]
-    pcd2 = pcds[1]
+    pcd = o3d.io.read_point_cloud("bekertje3.ply")
+    pcd2 = o3d.io.read_point_cloud("bekertje4.ply")
 
-    # Execute ICP registration
-    # colored pointcloud registration
-    # This is implementation of following paper
-    # J. Park, Q.-Y. Zhou, V. Koltun,
-    # Colored Point Cloud Registration Revisited, ICCV 2017
     voxel_radius = [0.08, 0.04, 0.02, 0.01]
     max_iter = [100, 50, 30, 14]
     current_transformation = np.identity(4)
@@ -44,6 +42,7 @@ def depth_to_point_cloud():
         source_down = pcd2.voxel_down_sample(radius)
         target_down = pcd.voxel_down_sample(radius)
 
+        # Estimate normals
         source_down.estimate_normals(
             o3d.geometry.KDTreeSearchParamHybrid(radius=radius * 2, max_nn=30))
         target_down.estimate_normals(
@@ -58,15 +57,12 @@ def depth_to_point_cloud():
                                                             max_iteration=iter))
         current_transformation = result_icp.transformation
 
-    threshold = 0.02
+    threshold = 10
     
-    print("Apply point-to-point ICP")
+    # Apply point to point ICP and visualize
     reg_p2p = o3d.pipelines.registration.registration_icp(
         pcd2, pcd, threshold, current_transformation,
         o3d.pipelines.registration.TransformationEstimationPointToPoint())
-    print(reg_p2p)
-    print("Transformation is:")
-    print(reg_p2p.transformation)
     draw_registration_result(pcd2, pcd, reg_p2p.transformation)
 
 if __name__ == '__main__':
