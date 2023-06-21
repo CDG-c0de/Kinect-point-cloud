@@ -11,7 +11,7 @@ The required pip packages can be installed using the requirements.txt file: `pip
 `normals.py`: run like `python normals.py`, the script will automatically take 1 jpg image and its corresponding png depth image, along with its intrinsic parameters. <br />
 `stereo_calib.py`: run like `python stereo_calib.py`, the script will automatically take 2 jpg images and their corresponding png depth images, along with their intrinsic and extrinsic parameters. <br />
 ## Input formatting
-The scripts that automatically take input files assume the following format, where index represents the camera index (index is 0 up to amount of cameras). This formatting is already correct if the code from [C++ repo](https://github.com/CDG-c0de/Kinect-calib-and-capture) is used: <br /> <br />
+The scripts that automatically take input files assume the following format, where index represents the camera index (index is 0 up to amount of cameras-1). This formatting is already correct if the code from [C++ repo](https://github.com/CDG-c0de/Kinect-calib-and-capture) is used: <br /> <br />
 intrinsic[index].json&nbsp;&nbsp;&nbsp;&nbsp;*the camera intrinsic matrix of camera [index]* <br /><br />
 color[index].jpg&nbsp;&nbsp;&nbsp;&nbsp;*the color image of camera [index]* <br /><br />
 depth[index].png&nbsp;&nbsp;&nbsp;&nbsp;*the depth image of camera [index]* <br /><br />
