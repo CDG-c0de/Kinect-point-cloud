@@ -1,5 +1,5 @@
 # Kinect-point-cloud
-This repo consists of multiple Python scripts; ICP registration, stereo calibration, multiway registration, estimating normals, manual registration, global registration, mesh generation, and colored point cloud registration.
+This repo consists of multiple Python scripts; stereo calibration, multiway registration, estimating normals, manual registration, global registration, mesh generation, and colored point cloud registration.
 ## Dependencies
 The required pip packages can be installed using the requirements.txt file: `pip install -r requirements.txt`
 ## How to run
